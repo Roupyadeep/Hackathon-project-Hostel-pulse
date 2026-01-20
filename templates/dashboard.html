@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}HostelPulse - Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mood-bg-tired {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    }
+
+    .dark .mood-bg-tired {
+        background: linear-gradient(135deg, #0c4a6e 0%, #082f49 100%);
+    }
+
+    .mood-bg-stressed {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    }
+
+    .dark .mood-bg-stressed {
+        background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+    }
+
+    .mood-bg-active {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    }
+
+    .dark .mood-bg-active {
+        background: linear-gradient(135deg, #064e3b 0%, #064e3b 100%);
+    }
+
+    .mood-bg-balanced {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    }
+
+    .dark .mood-bg-balanced {
+        background: linear-gradient(135deg, #78350f 0%, #451a03 100%);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .dark .glass-card {
+        background: rgba(31, 41, 55, 0.7);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+    }
+
+    @keyframes pulse-slow {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.2;
+        }
+    }
+
+    .blob {
+        position: absolute;
+        filter: blur(60px);
+        z-index: 0;
+        animation: pulse-slow 10s infinite ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="dashboard-container"
+    class="min-h-screen mood-bg-{{ mood }} relative overflow-hidden transition-all duration-700">
+    <!-- Animated Background Blobs -->
+    <div class="blob w-96 h-96 bg-blue-400 rounded-full" style="top: -10%; left: -10%;"></div>
+    <div class="blob w-80 h-80 bg-purple-400 rounded-full" style="bottom: 10%; right: -5%; animation-delay: -2s;"></div>
+    <div class="blob w-64 h-64 bg-yellow-400 rounded-full" style="top: 40%; left: 15%; animation-delay: -5s;"></div>
+
+    <!-- Header -->
+    <header class="glass-card sticky top-0 z-40 px-6 py-4 shadow-sm">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="bg-gradient-to-br from-indigo-600 to-violet-600 p-2.5 rounded-2xl shadow-lg transform hover:rotate-6 transition-transform">
+                    {% include 'components/logo.html' with size=32 color="white" %}
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">HostelPulse</h1>
+                    <p class="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">Student
+                        Wellness OS</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <!-- Score Indicator -->
+                <div
+                    class="flex items-center space-x-3 bg-white/50 dark:bg-gray-800/50 px-4 py-2 rounded-2xl border border-white/20">
+                    <div class="relative w-10 h-10">
+                        <svg class="w-10 h-10 transform -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="3"
+                                class="text-gray-200 dark:text-gray-700"></circle>
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-dasharray="{{ balance_score }}, 100"
+                                class="text-indigo-600 dark:text-indigo-400"></circle>
+                        </svg>
+                        <span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{{
+                            balance_score }}</span>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">Balance</span>
+                </div>
+
+                <button onclick="toggleTheme()"
+                    class="p-3 rounded-2xl glass-card hover:scale-110 transition-all shadow-md group">
+                    <span class="text-xl group-hover:rotate-12 transition-transform block dark:hidden">🌙</span>
+                    <span class="text-xl group-hover:rotate-12 transition-transform hidden dark:block">☀️</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-6 space-y-8 relative z-10 pb-32">
+        <!-- Welcome Section -->
+        <section class="space-y-2">
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Hi student, <span
+                    class="text-indigo-600 dark:text-indigo-400">let's check in.</span></h2>
+            <p class="text-gray-600 dark:text-gray-400 font-medium">{{ message }}</p>
+        </section>
+
+        <!-- Mood Section -->
+        <div class="space-y-4">
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-4">Select Your Current Vibe
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {% for m in "tired,stressed,active,balanced"|slice:"," %}
+                <button onclick="changeMood('{{ m }}')"
+                    class="mood-btn group py-5 px-8 rounded-[2rem] glass-card transition-all duration-300 hover:scale-[1.05] hover:shadow-xl border-2 {% if mood == m %}border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20 scale-[1.02]{% else %}border-transparent bg-white/50 dark:bg-gray-800/50{% endif %}">
+                    <span class="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">{{ m
+                        }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- AI Insights Card -->
+        <div class="glass-card rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/40">
+            <div class="bg-gradient-to-r from-indigo-600/10 to-purple-600/10 p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-inner">
+                            <span class="text-2xl">✨</span>
+                        </div>
+                        <h2 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Gemini Suggestions
+                        </h2>
+                    </div>
+                    <span
+                        class="px-4 py-1.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg">Live
+                        AI</span>
+                </div>
+
+                <div id="suggestions-container" class="grid gap-4">
+                    {% for suggestion in suggestions %}
+                    <div class="group relative">
+                        <div
+                            class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500">
+                        </div>
+                        <button
+                            class="relative w-full flex items-center space-x-4 p-5 bg-white dark:bg-gray-800/80 rounded-[1.25rem] transition-all hover:translate-x-1 border border-white/20 shadow-sm">
+                            <div
+                                class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold">
+                                {{ forloop.counter }}
+                            </div>
+                            <span class="text-sm font-semibold text-left text-gray-800 dark:text-gray-200">{{ suggestion
+                                }}</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Button -->
+        <div class="flex justify-center pt-4">
+            <button onclick="syncData()" id="sync-btn"
+                class="group relative px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-[2rem] font-black text-lg transition-all hover:scale-105 active:scale-95 shadow-2xl">
+                <div class="flex items-center space-x-3">
+                    <span id="sync-text">🔄 Sync Life Data</span>
+                </div>
+            </button>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    {% include 'components/bottom_nav.html' with active_page='dashboard' %}
+</div>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
